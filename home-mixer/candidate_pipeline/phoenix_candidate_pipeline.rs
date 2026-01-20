@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/candidate_pipeline/phoenix_candidate_pipeline.rs，用于说明该模块的核心实现。
 use crate::candidate_hydrators::core_data_candidate_hydrator::CoreDataCandidateHydrator;
 use crate::candidate_hydrators::gizmoduck_hydrator::GizmoduckCandidateHydrator;
 use crate::candidate_hydrators::in_network_candidate_hydrator::InNetworkCandidateHydrator;

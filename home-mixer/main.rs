@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/main.rs，用于说明该模块的核心实现。
 use clap::Parser;
 use log::info;
 use std::time::Duration;

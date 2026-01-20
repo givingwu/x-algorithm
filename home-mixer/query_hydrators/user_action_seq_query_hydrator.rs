@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/query_hydrators/user_action_seq_query_hydrator.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use crate::clients::uas_fetcher::{UserActionSequenceFetcher, UserActionSequenceOps};
 use crate::params as p;

@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/thunder_service.rs，用于说明该模块的核心实现。
 use lazy_static::lazy_static;
 use log::{debug, info, warn};
 use std::cmp::Reverse;

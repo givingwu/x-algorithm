@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/scorers/weighted_scorer.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::{PhoenixScores, PostCandidate};
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use crate::params as p;

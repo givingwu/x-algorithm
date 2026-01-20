@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/kafka/tweet_events_listener_v2.rs，用于说明该模块的核心实现。
 use anyhow::Result;
 use log::{info, warn};
 use std::sync::Arc;

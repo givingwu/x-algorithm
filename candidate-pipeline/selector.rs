@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 candidate-pipeline/selector.rs，用于说明该模块的核心实现。
 use crate::util;
 use std::any::type_name_of_val;
 
