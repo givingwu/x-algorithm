@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/candidate_pipeline/candidate.rs，用于说明该模块的核心实现。
 use std::collections::HashMap;
 use xai_home_mixer_proto as pb;
 use xai_visibility_filtering::models as vf;

@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 candidate-pipeline/candidate_pipeline.rs，用于说明该模块的核心实现。
 use crate::filter::Filter;
 use crate::hydrator::Hydrator;
 use crate::query_hydrator::QueryHydrator;

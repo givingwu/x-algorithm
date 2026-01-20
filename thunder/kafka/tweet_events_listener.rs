@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/kafka/tweet_events_listener.rs，用于说明该模块的核心实现。
 use anyhow::{Context, Result};
 use log::{error, info, warn};
 use prost::Message;

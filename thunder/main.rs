@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/main.rs，用于说明该模块的核心实现。
 use anyhow::{Context, Result};
 use axum::Router;
 use clap::Parser;

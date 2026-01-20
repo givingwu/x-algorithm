@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/server.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::CandidateHelpers;
 use crate::candidate_pipeline::phoenix_candidate_pipeline::PhoenixCandidatePipeline;
 use crate::candidate_pipeline::query::ScoredPostsQuery;

@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/posts/post_store.rs，用于说明该模块的核心实现。
 use anyhow::Result;
 use dashmap::DashMap;
 use log::info;

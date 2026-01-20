@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/query_hydrators/user_features_query_hydrator.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use crate::candidate_pipeline::query_features::UserFeatures;
 use crate::clients::strato_client::StratoClient;

@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/kafka_utils.rs，用于说明该模块的核心实现。
 use anyhow::{Context, Result};
 use std::sync::Arc;
 use xai_kafka::KafkaProducerConfig;
