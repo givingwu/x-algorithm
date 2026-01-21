@@ -57,7 +57,7 @@ pub async fn start_kafka(
             ..Default::default()
         };
 
-        // Start Kafka background tasks
+        // Start Kafka background tasks. 中文：启动 Kafka 后台任务。
         start_tweet_event_processing_v2(
             v2_tweet_events_consumer_config,
             Arc::clone(&post_store),
@@ -67,9 +67,9 @@ pub async fn start_kafka(
         .await;
     }
 
-    // Only start Kafka processing and background tasks if not in serving mode
+    // Only start Kafka processing and background tasks if not in serving mode. 中文：仅在非服务模式下启动 Kafka 处理与后台任务。
     if !args.is_serving {
-        // Create Kafka consumer config
+        // Create Kafka consumer config. 中文：创建 Kafka 消费者配置。
         let tweet_events_consumer_config = KafkaConsumerConfig {
             base_config: KafkaConfig {
                 dest: TWEET_EVENT_DEST.to_string(),

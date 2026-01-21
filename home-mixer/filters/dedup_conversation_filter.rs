@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use tonic::async_trait;
 use xai_candidate_pipeline::filter::{Filter, FilterResult};
 
-/// Keeps only the highest-scored candidate per branch of a conversation tree
+/// Keeps only the highest-scored candidate per branch of a conversation tree. 中文：每个对话分支只保留最高分的候选。
 pub struct DedupConversationFilter;
 
 #[async_trait]

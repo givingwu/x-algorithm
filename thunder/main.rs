@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
     env_logger::init();
     let args = args::Args::parse();
 
-    // Initialize PostStore
+    // Initialize PostStore. 中文：初始化 PostStore。
     let post_store = Arc::new(PostStore::new(
         args.post_retention_seconds,
         args.request_timeout_ms,
@@ -30,11 +30,11 @@ async fn main() -> Result<()> {
         args.request_timeout_ms
     );
 
-    // Initialize StratoClient for fetching following lists
+    // Initialize StratoClient for fetching following lists. 中文：初始化 StratoClient 以获取关注列表。
     let strato_client = Arc::new(StratoClient::new());
     info!("Initialized StratoClient");
 
-    // Create ThunderService with the PostStore, StratoClient, and concurrency limit
+    // Create ThunderService with the PostStore, StratoClient, and concurrency limit. 中文：用 PostStore、StratoClient 和并发限制创建 ThunderService。
     let thunder_service = ThunderServiceImpl::new(
         Arc::clone(&post_store),
         Arc::clone(&strato_client),
@@ -46,10 +46,10 @@ async fn main() -> Result<()> {
     );
     let routes = Routes::new(thunder_service.server());
 
-    // Set up gRPC config
+    // Set up gRPC config. 中文：设置 gRPC 配置。
     let grpc_config = GrpcConfig::new(args.grpc_port, routes);
 
-    // Create HTTP server with gRPC support
+    // Create HTTP server with gRPC support. 中文：创建支持 gRPC 的 HTTP 服务。
     let mut http_server = HttpServer::new(
         args.http_port,
         Router::new(),
@@ -64,12 +64,12 @@ async fn main() -> Result<()> {
         xai_profiling::spawn_server(3000, CancellationToken::new()).await;
     }
 
-    // Create channel for post events
+    // Create channel for post events. 中文：创建帖子事件通道。
     let (tx, mut rx) = tokio::sync::mpsc::channel::<i64>(args.kafka_num_threads);
     kafka_utils::start_kafka(&args, post_store.clone(), "", tx).await?;
 
     if args.is_serving {
-        // Wait for Kafka catchup signal
+        // Wait for Kafka catchup signal. 中文：等待 Kafka 追赶完成信号。
         let start = Instant::now();
         for _ in 0..args.kafka_num_threads {
             rx.recv().await;
@@ -78,11 +78,11 @@ async fn main() -> Result<()> {
 
         post_store.finalize_init().await?;
 
-        // Start stats logger
+        // Start stats logger. 中文：启动统计日志。
         Arc::clone(&post_store).start_stats_logger();
         info!("Started PostStore stats logger",);
 
-        // Start auto-trim task to remove posts older than retention period
+        // Start auto-trim task to remove posts older than retention period. 中文：启动自动清理任务，移除过期内容。
         Arc::clone(&post_store).start_auto_trim(2); // Run every 2 minutes
         info!(
             "Started PostStore auto-trim task (interval: 2 minutes, retention: {:.1} days)",
@@ -93,7 +93,7 @@ async fn main() -> Result<()> {
     http_server.set_readiness(true);
     info!("HTTP/gRPC server is ready");
 
-    // Wait for termination signal
+    // Wait for termination signal. 中文：等待终止信号。
     http_server.wait_for_termination().await;
     info!("Server terminated");
 

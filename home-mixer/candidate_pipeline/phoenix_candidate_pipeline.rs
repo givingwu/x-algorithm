@@ -81,7 +81,7 @@ impl PhoenixCandidatePipeline {
         gizmoduck_client: Arc<dyn GizmoduckClient + Send + Sync>,
         vf_client: Arc<dyn VisibilityFilteringClient + Send + Sync>,
     ) -> PhoenixCandidatePipeline {
-        // Query Hydrators
+        // Query Hydrators. 中文：查询补全器。
         let query_hydrators: Vec<Box<dyn QueryHydrator<ScoredPostsQuery>>> = vec![
             Box::new(UserActionSeqQueryHydrator::new(uas_fetcher)),
             Box::new(UserFeaturesQueryHydrator {
@@ -89,7 +89,7 @@ impl PhoenixCandidatePipeline {
             }),
         ];
 
-        // Sources
+        // Sources. 中文：候选来源。
         let phoenix_source = Box::new(PhoenixSource {
             phoenix_retrieval_client,
         });
@@ -97,7 +97,7 @@ impl PhoenixCandidatePipeline {
         let sources: Vec<Box<dyn Source<ScoredPostsQuery, PostCandidate>>> =
             vec![phoenix_source, thunder_source];
 
-        // Hydrators
+        // Hydrators. 中文：候选补全器。
         let hydrators: Vec<Box<dyn Hydrator<ScoredPostsQuery, PostCandidate>>> = vec![
             Box::new(InNetworkCandidateHydrator),
             Box::new(CoreDataCandidateHydrator::new(tes_client.clone()).await),
@@ -106,7 +106,7 @@ impl PhoenixCandidatePipeline {
             Box::new(GizmoduckCandidateHydrator::new(gizmoduck_client).await),
         ];
 
-        // Filters
+        // Filters. 中文：过滤器。
         let filters: Vec<Box<dyn Filter<ScoredPostsQuery, PostCandidate>>> = vec![
             Box::new(DropDuplicatesFilter),
             Box::new(CoreDataHydrationFilter),
@@ -120,7 +120,7 @@ impl PhoenixCandidatePipeline {
             Box::new(AuthorSocialgraphFilter),
         ];
 
-        // Scorers
+        // Scorers. 中文：评分器。
         let phoenix_scorer = Box::new(PhoenixScorer { phoenix_client });
         let weighted_scorer = Box::new(WeightedScorer);
         let author_diversity_scorer = Box::new(AuthorDiversityScorer::default());
@@ -132,18 +132,18 @@ impl PhoenixCandidatePipeline {
             oon_scorer,
         ];
 
-        // Selector
+        // Selector. 中文：选择器。
         let selector = TopKScoreSelector;
 
-        // Post-selection hydrators
+        // Post-selection hydrators. 中文：选择后的补全器。
         let post_selection_hydrators: Vec<Box<dyn Hydrator<ScoredPostsQuery, PostCandidate>>> =
             vec![Box::new(VFCandidateHydrator::new(vf_client.clone()).await)];
 
-        // Post-selection filters
+        // Post-selection filters. 中文：选择后的过滤器。
         let post_selection_filters: Vec<Box<dyn Filter<ScoredPostsQuery, PostCandidate>>> =
             vec![Box::new(VFFilter), Box::new(DedupConversationFilter)];
 
-        // Side Effects
+        // Side Effects. 中文：副作用处理。
         let side_effects: Arc<Vec<Box<dyn SideEffect<ScoredPostsQuery, PostCandidate>>>> =
             Arc::new(vec![Box::new(CacheRequestInfoSideEffect { strato_client })]);
 

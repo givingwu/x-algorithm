@@ -6,7 +6,7 @@ use std::time::Duration;
 use tonic::async_trait;
 use xai_candidate_pipeline::filter::{Filter, FilterResult};
 
-/// Filter that removes tweets older than a specified duration.
+/// Filter that removes tweets older than a specified duration. 中文：移除超过指定时长的旧帖子。
 pub struct AgeFilter {
     pub max_age: Duration,
 }

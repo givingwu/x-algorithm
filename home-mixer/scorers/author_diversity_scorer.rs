@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use tonic::async_trait;
 use xai_candidate_pipeline::scorer::Scorer;
 
-/// Diversify authors served within a single feed response
+/// Diversify authors served within a single feed response. 中文：在单次信息流结果中增加作者多样性。
 pub struct AuthorDiversityScorer {
     decay_factor: f64,
     floor: f64,
