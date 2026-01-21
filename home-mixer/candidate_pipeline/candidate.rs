@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/candidate_pipeline/candidate.rs，用于说明该模块的核心实现。
 use std::collections::HashMap;
 use xai_home_mixer_proto as pb;
 use xai_visibility_filtering::models as vf;
@@ -46,7 +47,7 @@ pub struct PhoenixScores {
     pub block_author_score: Option<f64>,
     pub mute_author_score: Option<f64>,
     pub report_score: Option<f64>,
-    // Continuous actions
+    // Continuous actions. 中文：连续型行为。
     pub dwell_time: Option<f64>,
 }
 

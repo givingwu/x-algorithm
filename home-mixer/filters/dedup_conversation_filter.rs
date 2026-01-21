@@ -1,10 +1,11 @@
+//! 中文说明：本文件位于 home-mixer/filters/dedup_conversation_filter.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::PostCandidate;
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use std::collections::HashMap;
 use tonic::async_trait;
 use xai_candidate_pipeline::filter::{Filter, FilterResult};
 
-/// Keeps only the highest-scored candidate per branch of a conversation tree
+/// Keeps only the highest-scored candidate per branch of a conversation tree. 中文：每个对话分支只保留最高分的候选。
 pub struct DedupConversationFilter;
 
 #[async_trait]

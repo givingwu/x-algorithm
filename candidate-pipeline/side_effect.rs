@@ -1,9 +1,10 @@
+//! 中文说明：本文件位于 candidate-pipeline/side_effect.rs，用于说明该模块的核心实现。
 use crate::util;
 use std::any::type_name_of_val;
 use std::sync::Arc;
 use tonic::async_trait;
 
-// A side-effect is an action run that doesn't affect the pipeline result from being returned
+// A side-effect is an action run that doesn't affect the pipeline result from being returned. 中文：副作用是不会影响流水线结果返回的动作。
 #[derive(Clone)]
 pub struct SideEffectInput<Q, C> {
     pub query: Arc<Q>,
@@ -16,7 +17,7 @@ where
     Q: Clone + Send + Sync + 'static,
     C: Clone + Send + Sync + 'static,
 {
-    /// Decide if this side-effect should be run
+    /// Decide if this side-effect should be run. 中文：决定是否执行该副作用。
     fn enable(&self, _query: Arc<Q>) -> bool {
         true
     }

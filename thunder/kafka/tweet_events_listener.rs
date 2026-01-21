@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/kafka/tweet_events_listener.rs，用于说明该模块的核心实现。
 use anyhow::{Context, Result};
 use log::{error, info, warn};
 use prost::Message;
@@ -20,10 +21,10 @@ use crate::{
     schema::{tweet::Tweet, tweet_events::TweetEventData},
 };
 
-/// Counter for logging batch processing every Nth time
+/// Counter for logging batch processing every Nth time. 中文：用于每隔 N 次记录批处理日志的计数器。
 static BATCH_LOG_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
-/// Monitor Kafka partition lag and update metrics
+/// Monitor Kafka partition lag and update metrics. 中文：监控 Kafka 分区延迟并更新指标。
 async fn monitor_partition_lag(
     consumer: Arc<RwLock<KafkaConsumer>>,
     topic: String,
@@ -73,7 +74,7 @@ fn is_eligible_video(tweet: &Tweet) -> bool {
         .unwrap_or(false)
 }
 
-/// Start the partition lag monitoring task in the background
+/// Start the partition lag monitoring task in the background. 中文：后台启动分区延迟监控任务。
 pub fn start_partition_lag_monitor(
     consumer: Arc<RwLock<KafkaConsumer>>,
     topic: String,
@@ -88,7 +89,7 @@ pub fn start_partition_lag_monitor(
     });
 }
 
-/// Start the tweet event processing loop in the background with configurable number of threads
+/// Start the tweet event processing loop in the background with configurable number of threads. 中文：后台启动推文事件处理循环，可配置线程数。
 pub async fn start_tweet_event_processing(
     base_config: KafkaConsumerConfig,
     producer_config: KafkaProducerConfig,
@@ -97,7 +98,7 @@ pub async fn start_tweet_event_processing(
     let num_partitions = args.tweet_events_num_partitions as usize;
     let kafka_num_threads = args.kafka_num_threads;
 
-    // Use all available partitions
+    // Use all available partitions. 中文：使用所有可用分区。
     let partitions_to_use: Vec<i32> = (0..num_partitions as i32).collect();
     let partitions_per_thread = num_partitions.div_ceil(kafka_num_threads);
 
@@ -121,7 +122,7 @@ pub async fn start_tweet_event_processing(
     spawn_processing_threads(base_config, partitions_to_use, producer, args);
 }
 
-/// Spawn multiple processing threads, each handling a subset of partitions
+/// Spawn multiple processing threads, each handling a subset of partitions. 中文：启动多个处理线程，每个线程处理一部分分区。
 fn spawn_processing_threads(
     base_config: KafkaConsumerConfig,
     partitions_to_use: Vec<i32>,
@@ -157,7 +158,7 @@ fn spawn_processing_threads(
 
             match create_kafka_consumer(thread_config).await {
                 Ok(consumer) => {
-                    // Start partition lag monitoring for this thread's partitions
+                    // Start partition lag monitoring for this thread's partitions. 中文：启动该线程分区的延迟监控。
                     start_partition_lag_monitor(
                         Arc::clone(&consumer),
                         topic,
@@ -189,7 +190,7 @@ fn spawn_processing_threads(
     }
 }
 
-/// Process a batch of messages: deserialize, extract posts, and store them
+/// Process a batch of messages: deserialize, extract posts, and store them. 中文：处理一批消息：反序列化、提取帖子并存储。
 async fn process_message_batch(
     messages: Vec<KafkaMessage>,
     batch_num: usize,
@@ -271,7 +272,7 @@ async fn process_message_batch(
         }
     }
 
-    // Send each LightPost as an InNetworkEvent to the producer in separate tasks (only if producer is enabled)
+    // Send each LightPost as an InNetworkEvent to the producer in separate tasks (only if producer is enabled). 中文：将每个 LightPost 作为 InNetworkEvent 发送给生产者（仅在启用生产者时）。
     if let Some(ref producer) = producer {
         let mut send_tasks = Vec::with_capacity(create_tweets.len());
         for light_post in &create_tweets {
@@ -321,7 +322,7 @@ async fn process_message_batch(
             }));
         }
 
-        // Wait for all send tasks to complete
+        // Wait for all send tasks to complete. 中文：等待所有发送任务完成。
         for task in send_tasks {
             if let Err(e) = task.await {
                 error!("Error writing to kafka {}", e);
@@ -329,7 +330,7 @@ async fn process_message_batch(
         }
     }
 
-    // Log every 100th batch
+    // Log every 100th batch. 中文：每处理 100 个批次记录一次日志。
     let batch_count = BATCH_LOG_COUNTER.fetch_add(1, Ordering::Relaxed);
     if batch_count.is_multiple_of(1000) {
         info!(
@@ -345,7 +346,7 @@ async fn process_message_batch(
     Ok(())
 }
 
-/// Main message processing loop that polls Kafka, batches messages, and stores posts
+/// Main message processing loop that polls Kafka, batches messages, and stores posts. 中文：主处理循环，轮询 Kafka、批量处理消息并存储帖子。
 async fn process_tweet_events(
     consumer: Arc<RwLock<KafkaConsumer>>,
     batch_size: usize,
@@ -365,14 +366,14 @@ async fn process_tweet_events(
             Ok(messages) => {
                 message_buffer.extend(messages);
 
-                // Process batch when we have enough messages
+                // Process batch when we have enough messages. 中文：当消息数量足够时处理批次。
                 if message_buffer.len() >= batch_size {
                     batch_num += 1;
 
                     let messages = std::mem::take(&mut message_buffer);
                     let producer_clone = producer.clone();
 
-                    // Spawn batch processing in a blocking task
+                    // Spawn batch processing in a blocking task. 中文：在阻塞任务中执行批处理。
                     process_message_batch(messages, batch_num, producer_clone, post_retention_sec)
                         .await
                         .context("Error processing tweet event batch")?;

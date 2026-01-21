@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/kafka/utils.rs，用于说明该模块的核心实现。
 use anyhow::{Context, Result};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -5,7 +6,7 @@ use xai_kafka::{KafkaMessage, config::KafkaConsumerConfig, consumer::KafkaConsum
 
 use crate::metrics;
 
-/// Create and start a Kafka consumer with the given configuration
+/// Create and start a Kafka consumer with the given configuration. 中文：用给定配置创建并启动 Kafka 消费者。
 pub async fn create_kafka_consumer(
     config: KafkaConsumerConfig,
 ) -> Result<Arc<RwLock<KafkaConsumer>>> {
@@ -18,7 +19,7 @@ pub async fn create_kafka_consumer(
     Ok(Arc::new(RwLock::new(consumer)))
 }
 
-/// Process a batch of Kafka messages and deserialize them using the provided deserializer function
+/// Process a batch of Kafka messages and deserialize them using the provided deserializer function. 中文：处理一批 Kafka 消息，并用提供的反序列化函数进行解析。
 pub fn deserialize_kafka_messages<T, F>(
     messages: Vec<KafkaMessage>,
     deserializer: F,

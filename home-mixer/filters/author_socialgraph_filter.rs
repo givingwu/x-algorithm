@@ -1,9 +1,10 @@
+//! 中文说明：本文件位于 home-mixer/filters/author_socialgraph_filter.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::PostCandidate;
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use tonic::async_trait;
 use xai_candidate_pipeline::filter::{Filter, FilterResult};
 
-// Remove candidates that are blocked or muted by the viewer
+// Remove candidates that are blocked or muted by the viewer. 中文：移除被当前用户屏蔽或静音的作者候选。
 pub struct AuthorSocialgraphFilter;
 
 #[async_trait]

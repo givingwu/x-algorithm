@@ -1,1 +1,1 @@
-Be excellent to each other.
+彼此友善、互相尊重。

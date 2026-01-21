@@ -1,41 +1,41 @@
-# X For You Feed Algorithm
+# X For You 信息流算法（中文版）
 
-This repository contains the core recommendation system powering the "For You" feed on X. It combines in-network content (from accounts you follow) with out-of-network content (discovered through ML-based retrieval) and ranks everything using a Grok-based transformer model.
+本仓库包含驱动 X「For You/为你推荐」信息流的核心推荐系统。它会将**站内（关注关系内）**内容与**站外（通过机器学习检索发现）**内容融合，并使用基于 Grok 的 Transformer 模型进行统一排序。
 
-> **Note:** The transformer implementation is ported from the [Grok-1 open source release](https://github.com/xai-org/grok-1) by xAI, adapted for recommendation system use cases.
+> **说明：** 本仓库中的 Transformer 实现移植自 xAI 的 [Grok-1 开源版本](https://github.com/xai-org/grok-1)，并针对推荐系统场景做了适配。
 
-## Table of Contents
+## 目录
 
-- [Overview](#overview)
-- [System Architecture](#system-architecture)
-- [Components](#components)
+- [概览](#概览)
+- [系统架构](#系统架构)
+- [组件](#组件)
   - [Home Mixer](#home-mixer)
   - [Thunder](#thunder)
   - [Phoenix](#phoenix)
   - [Candidate Pipeline](#candidate-pipeline)
-- [How It Works](#how-it-works)
-  - [Pipeline Stages](#pipeline-stages)
-  - [Scoring and Ranking](#scoring-and-ranking)
-  - [Filtering](#filtering)
-- [Key Design Decisions](#key-design-decisions)
-- [License](#license)
+- [工作原理](#工作原理)
+  - [流水线阶段](#流水线阶段)
+  - [评分与排序](#评分与排序)
+  - [过滤](#过滤)
+- [关键设计决策](#关键设计决策)
+- [许可证](#许可证)
 
 ---
 
-## Overview
+## 概览
 
-The For You feed algorithm retrieves, ranks, and filters posts from two sources:
+For You 信息流算法会从两个来源获取候选内容并进行排序与过滤：
 
-1. **In-Network (Thunder)**: Posts from accounts you follow
-2. **Out-of-Network (Phoenix Retrieval)**: Posts discovered from a global corpus
+1. **关注网络内（Thunder）**：来自你关注账号的帖子
+2. **关注网络外（Phoenix 检索）**：通过 ML 在全局语料中发现的帖子
 
-Both sources are combined and ranked together using **Phoenix**, a Grok-based transformer model that predicts engagement probabilities for each post. The final score is a weighted combination of these predicted engagements.
+两类来源会一起进入 **Phoenix**（基于 Grok 的 Transformer）进行统一排序。模型会预测每条内容的多种互动概率，并将它们加权得到最终分数。
 
-We have eliminated every single hand-engineered feature and most heuristics from the system. The Grok-based transformer does all the heavy lifting by understanding your engagement history (what you liked, replied to, shared, etc.) and using that to determine what content is relevant to you.
+系统几乎移除了所有手工特征与启发式规则。Grok Transformer 会直接理解你的互动历史（点赞、回复、转发等），并据此判断哪些内容更相关。
 
 ---
 
-## System Architecture
+## 系统架构
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -123,125 +123,125 @@ We have eliminated every single hand-engineered feature and most heuristics from
 
 ---
 
-## Components
+## 组件
 
 ### Home Mixer
 
-**Location:** [`home-mixer/`](home-mixer/)
+**位置：** [`home-mixer/`](home-mixer/)
 
-The orchestration layer that assembles the For You feed. It leverages the `CandidatePipeline` framework with the following stages:
+负责组装 For You 信息流的编排层（Orchestration Layer），基于 `CandidatePipeline` 框架组织以下阶段：
 
-| Stage | Description |
+| 阶段 | 说明 |
 |-------|-------------|
-| Query Hydrators | Fetch user context (engagement history, following list) |
-| Sources | Retrieve candidates from Thunder and Phoenix |
-| Hydrators | Enrich candidates with additional data |
-| Filters | Remove ineligible candidates |
-| Scorers | Predict engagement and compute final scores |
-| Selector | Sort by score and select top K |
-| Post-Selection Filters | Final visibility and dedup checks |
-| Side Effects | Cache request info for future use |
+| Query Hydrators | 拉取用户上下文（互动历史、关注列表） |
+| Sources | 从 Thunder 与 Phoenix 获取候选内容 |
+| Hydrators | 为候选补充更多特征数据 |
+| Filters | 去除不符合条件的候选 |
+| Scorers | 预测互动并计算最终分数 |
+| Selector | 按分数排序并选出 Top K |
+| Post-Selection Filters | 终态可见性与去重检查 |
+| Side Effects | 缓存请求信息以供后续使用 |
 
-The server exposes a gRPC endpoint (`ScoredPostsService`) that returns ranked posts for a given user.
+服务对外暴露 gRPC 端点（`ScoredPostsService`），返回指定用户的排序结果。
 
 ---
 
 ### Thunder
 
-**Location:** [`thunder/`](thunder/)
+**位置：** [`thunder/`](thunder/)
 
-An in-memory post store and realtime ingestion pipeline that tracks recent posts from all users. It:
+内存中的帖子存储与实时摄取管道，核心能力：
 
-- Consumes post create/delete events from Kafka
-- Maintains per-user stores for original posts, replies/reposts, and video posts
-- Serves "in-network" post candidates from accounts the requesting user follows
-- Automatically trims posts older than the retention period
+- 消费 Kafka 中的发帖/删帖事件
+- 维护每个用户的原帖、回复/转发、视频帖等存储
+- 向关注关系内的用户提供候选帖
+- 自动清理超过保留期的旧内容
 
-Thunder enables sub-millisecond lookups for in-network content without hitting an external database.
+Thunder 支持亚毫秒级检索，无需访问外部数据库。
 
 ---
 
 ### Phoenix
 
-**Location:** [`phoenix/`](phoenix/)
+**位置：** [`phoenix/`](phoenix/)
 
-The ML component with two main functions:
+机器学习模块，包含两大功能：
 
-#### 1. Retrieval (Two-Tower Model)
-Finds relevant out-of-network posts:
-- **User Tower**: Encodes user features and engagement history into an embedding
-- **Candidate Tower**: Encodes all posts into embeddings
-- **Similarity Search**: Retrieves top-K posts via dot product similarity
+#### 1. 检索（双塔模型）
+在全局语料中查找相关内容：
+- **User Tower**：将用户特征与互动历史编码为向量
+- **Candidate Tower**：为所有帖子生成向量
+- **相似度检索**：用点积相似度召回 Top-K
 
-#### 2. Ranking (Transformer with Candidate Isolation)
-Predicts engagement probabilities for each candidate:
-- Takes user context (engagement history) and candidate posts as input
-- Uses special attention masking so candidates cannot attend to each other
-- Outputs probabilities for each action type (like, reply, repost, click, etc.)
+#### 2. 排序（具备候选隔离的 Transformer）
+预测每条候选内容的互动概率：
+- 输入为用户上下文与候选内容
+- 使用特殊注意力掩码，候选之间彼此不可见
+- 输出多种行为的概率（点赞、回复、转发、点击等）
 
-See [`phoenix/README.md`](phoenix/README.md) for detailed architecture documentation.
+详细架构见 [`phoenix/README.md`](phoenix/README.md)。
 
 ---
 
 ### Candidate Pipeline
 
-**Location:** [`candidate-pipeline/`](candidate-pipeline/)
+**位置：** [`candidate-pipeline/`](candidate-pipeline/)
 
-A reusable framework for building recommendation pipelines. Defines traits for:
+推荐流水线的可复用框架，定义以下特征接口（Trait）：
 
-| Trait | Purpose |
+| Trait | 作用 |
 |-------|---------|
-| `Source` | Fetch candidates from a data source |
-| `Hydrator` | Enrich candidates with additional features |
-| `Filter` | Remove candidates that shouldn't be shown |
-| `Scorer` | Compute scores for ranking |
-| `Selector` | Sort and select top candidates |
-| `SideEffect` | Run async side effects (caching, logging) |
+| `Source` | 从数据源获取候选 |
+| `Hydrator` | 为候选补充特征 |
+| `Filter` | 过滤不应展示的候选 |
+| `Scorer` | 计算用于排序的分数 |
+| `Selector` | 排序并选出 Top 候选 |
+| `SideEffect` | 执行异步副作用（缓存、日志） |
 
-The framework runs sources and hydrators in parallel where possible, with configurable error handling and logging.
-
----
-
-## How It Works
-
-### Pipeline Stages
-
-1. **Query Hydration**: Fetch the user's recent engagements history and metadata (eg. following list)
-
-2. **Candidate Sourcing**: Retrieve candidates from:
-   - **Thunder**: Recent posts from followed accounts (in-network)
-   - **Phoenix Retrieval**: ML-discovered posts from the global corpus (out-of-network)
-
-3. **Candidate Hydration**: Enrich candidates with:
-   - Core post data (text, media, etc.)
-   - Author information (username, verification status)
-   - Video duration (for video posts)
-   - Subscription status
-
-4. **Pre-Scoring Filters**: Remove posts that are:
-   - Duplicates
-   - Too old
-   - From the viewer themselves
-   - From blocked/muted accounts
-   - Containing muted keywords
-   - Previously seen or recently served
-   - Ineligible subscription content
-
-5. **Scoring**: Apply multiple scorers sequentially:
-   - **Phoenix Scorer**: Get ML predictions from the Phoenix transformer model
-   - **Weighted Scorer**: Combine predictions into a final relevance score
-   - **Author Diversity Scorer**: Attenuate repeated author scores for diversity
-   - **OON Scorer**: Adjust scores for out-of-network content
-
-6. **Selection**: Sort by score and select the top K candidates
-
-7. **Post-Selection Processing**: Final validation of post candidates to be served
+框架会尽可能并行执行 Sources 与 Hydrators，并提供可配置的错误处理与日志。
 
 ---
 
-### Scoring and Ranking
+## 工作原理
 
-The Phoenix Grok-based transformer model predicts probabilities for multiple engagement types:
+### 流水线阶段
+
+1. **Query Hydration**：获取用户近期互动历史与元数据（如关注列表）
+
+2. **候选召回**：从两路获取候选：
+   - **Thunder**：来自关注账号的近期帖子（关注内）
+   - **Phoenix Retrieval**：ML 在全局语料中发现的帖子（关注外）
+
+3. **候选 Hydration**：为候选补充：
+   - 帖子核心数据（文本、媒体）
+   - 作者信息（用户名、认证状态）
+   - 视频时长（视频内容）
+   - 订阅状态
+
+4. **评分前过滤**：移除以下内容：
+   - 重复候选
+   - 过旧内容
+   - 用户本人发布的内容
+   - 被屏蔽/静音的账号
+   - 含屏蔽关键词的内容
+   - 已经看过或近期已送达的内容
+   - 不可访问的订阅内容
+
+5. **评分**：依次运行多个 Scorer：
+   - **Phoenix Scorer**：从 Phoenix Transformer 获取概率预测
+   - **Weighted Scorer**：将多种行为概率加权为最终分数
+   - **Author Diversity Scorer**：衰减重复作者，保证多样性
+   - **OON Scorer**：调整关注外内容得分
+
+6. **选择**：按分数排序，选择 Top K 候选
+
+7. **选择后处理**：最终合法性与可见性校验
+
+---
+
+### 评分与排序
+
+Phoenix 模型会预测多种互动行为的概率：
 
 ```
 Predictions:
@@ -262,64 +262,64 @@ Predictions:
 └── P(report)
 ```
 
-The **Weighted Scorer** combines these into a final score:
+**Weighted Scorer** 将它们组合为最终分数：
 
 ```
 Final Score = Σ (weight_i × P(action_i))
 ```
 
-Positive actions (like, repost, share) have positive weights. Negative actions (block, mute, report) have negative weights, pushing down content the user would likely dislike.
+正向行为（点赞、转发、分享）有正权重；负向行为（拉黑、静音、举报）有负权重，降低你可能不喜欢的内容排序。
 
 ---
 
-### Filtering
+### 过滤
 
-Filters run at two stages:
+过滤发生在两个阶段：
 
-**Pre-Scoring Filters:**
-| Filter | Purpose |
+**评分前过滤：**
+| 过滤器 | 目的 |
 |--------|---------|
-| `DropDuplicatesFilter` | Remove duplicate post IDs |
-| `CoreDataHydrationFilter` | Remove posts that failed to hydrate core metadata |
-| `AgeFilter` | Remove posts older than threshold |
-| `SelfpostFilter` | Remove user's own posts |
-| `RepostDeduplicationFilter` | Dedupe reposts of same content |
-| `IneligibleSubscriptionFilter` | Remove paywalled content user can't access |
-| `PreviouslySeenPostsFilter` | Remove posts user has already seen |
-| `PreviouslyServedPostsFilter` | Remove posts already served in session |
-| `MutedKeywordFilter` | Remove posts with user's muted keywords |
-| `AuthorSocialgraphFilter` | Remove posts from blocked/muted authors |
+| `DropDuplicatesFilter` | 移除重复帖子 ID |
+| `CoreDataHydrationFilter` | 移除核心数据补充失败的候选 |
+| `AgeFilter` | 移除超过阈值的老内容 |
+| `SelfpostFilter` | 移除用户自己的帖子 |
+| `RepostDeduplicationFilter` | 去除重复转发 |
+| `IneligibleSubscriptionFilter` | 移除用户无法访问的订阅内容 |
+| `PreviouslySeenPostsFilter` | 移除用户已看过的内容 |
+| `PreviouslyServedPostsFilter` | 移除同一会话中已送达的内容 |
+| `MutedKeywordFilter` | 移除包含屏蔽关键词的帖子 |
+| `AuthorSocialgraphFilter` | 移除被屏蔽/静音作者的帖子 |
 
-**Post-Selection Filters:**
-| Filter | Purpose |
+**选择后过滤：**
+| 过滤器 | 目的 |
 |--------|---------|
-| `VFFilter` | Remove posts that are deleted/spam/violence/gore etc. |
-| `DedupConversationFilter` | Deduplicate multiple branches of the same conversation thread |
+| `VFFilter` | 移除违规、垃圾、暴力、血腥等内容 |
+| `DedupConversationFilter` | 去重同一对话线程中的多分支内容 |
 
 ---
 
-## Key Design Decisions
+## 关键设计决策
 
-### 1. No Hand-Engineered Features
-The system relies entirely on the Grok-based transformer to learn relevance from user engagement sequences. No manual feature engineering for content relevance. This significantly reduces the complexity in our data pipelines and serving infrastructure.
+### 1. 无手工特征工程
+系统依赖 Grok Transformer 从用户互动序列中学习相关性，不需要人为定义内容特征，简化了数据与服务链路。
 
-### 2. Candidate Isolation in Ranking
-During transformer inference, candidates cannot attend to each other—only to the user context. This ensures the score for a post doesn't depend on which other posts are in the batch, making scores consistent and cacheable.
+### 2. 排序阶段的候选隔离
+Transformer 推理时，候选彼此不可见，只能关注用户上下文，从而保证评分不受批次中其他候选影响，便于缓存与复现。
 
-### 3. Hash-Based Embeddings
-Both retrieval and ranking use multiple hash functions for embedding lookup
+### 3. 基于哈希的嵌入
+检索与排序都采用多哈希函数进行 embedding 查找。
 
-### 4. Multi-Action Prediction
-Rather than predicting a single "relevance" score, the model predicts probabilities for many actions.
+### 4. 多行为预测
+模型同时预测多种行为概率，而非单一“相关性”分数。
 
-### 5. Composable Pipeline Architecture
-The `candidate-pipeline` crate provides a flexible framework for building recommendation pipelines with:
-- Separation of pipeline execution and monitoring from business logic
-- Parallel execution of independent stages and graceful error handling
-- Easy addition of new sources, hydrations, filters, and scorers
+### 5. 可组合的流水线架构
+`candidate-pipeline` 提供灵活框架：
+- 流水线执行与业务逻辑解耦
+- 独立阶段并行执行与稳健错误处理
+- 易于扩展新数据源、Hydration、过滤器与 Scorer
 
 ---
 
-## License
+## 许可证
 
-This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
+本项目基于 Apache License 2.0 许可发布。详见 [LICENSE](LICENSE)。

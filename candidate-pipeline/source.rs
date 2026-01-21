@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 candidate-pipeline/source.rs，用于说明该模块的核心实现。
 use std::any::{Any, type_name_of_val};
 use tonic::async_trait;
 
@@ -9,7 +10,7 @@ where
     Q: Clone + Send + Sync + 'static,
     C: Clone + Send + Sync + 'static,
 {
-    /// Decide if this source should run for the given query
+    /// Decide if this source should run for the given query. 中文：决定该数据源是否对当前查询生效。
     fn enable(&self, _query: &Q) -> bool {
         true
     }

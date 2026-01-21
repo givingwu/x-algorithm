@@ -1,34 +1,34 @@
-# Phoenix: Recommendation System
+# Phoenix：推荐系统（中文版）
 
-This repository contains JAX example code for the Phoenix recommendation system, which powers content ranking and retrieval. Phoenix uses transformer-based architectures for both **retrieval** (finding relevant candidates from millions of items) and **ranking** (ordering a smaller set of candidates by predicted engagement).
+本仓库包含 Phoenix 推荐系统的 JAX 示例代码，负责内容检索与排序。Phoenix 同时使用基于 Transformer 的架构完成**检索**（从海量候选中找到相关内容）与**排序**（对召回后的候选按互动概率排序）。
 
-> **Note:** The sample transformer implementation in this repository is ported from the [Grok-1 open source release](https://github.com/xai-org/grok-1) by xAI. The core transformer architecture comes from Grok-1, adapted here for recommendation system use cases with custom input embeddings and attention masking for candidate isolation. This code is representative of the model used internally with the exception of specific scaling optimizations.
+> **说明：** 本仓库中的 Transformer 示例实现移植自 xAI 的 [Grok-1 开源版本](https://github.com/xai-org/grok-1)。核心结构来自 Grok-1，并针对推荐系统场景做了适配（自定义输入嵌入与候选隔离的注意力掩码）。该代码代表内部模型的主要结构，但省略了部分规模化优化细节。
 
-## Table of Contents
+## 目录
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-  - [Two-Stage Recommendation Pipeline](#two-stage-recommendation-pipeline)
-  - [Retrieval: Two-Tower Model](#retrieval-two-tower-model)
-  - [Ranking: Transformer with Candidate Isolation](#ranking-transformer-with-candidate-isolation)
-- [Key Design Decisions](#key-design-decisions)
-- [Running the Code](#running-the-code)
-- [License](#license)
-
----
-
-## Overview
-
-Phoenix is a recommendation system that predicts user engagement (likes, reposts, replies, etc.) for content. It operates in two stages:
-
-1. **Retrieval**: Efficiently narrow down millions of candidates to hundreds using approximate nearest neighbor (ANN) search
-2. **Ranking**: Score and order the retrieved candidates using a more expressive transformer model
+- [概览](#概览)
+- [架构](#架构)
+  - [两阶段推荐流水线](#两阶段推荐流水线)
+  - [检索：双塔模型](#检索双塔模型)
+  - [排序：候选隔离的 Transformer](#排序候选隔离的-transformer)
+- [关键设计决策](#关键设计决策)
+- [运行代码](#运行代码)
+- [许可证](#许可证)
 
 ---
 
-## Architecture
+## 概览
 
-### Two-Stage Recommendation Pipeline
+Phoenix 是一个预测用户互动（点赞、转发、回复等）的推荐系统，分为两个阶段：
+
+1. **检索**：通过近似最近邻（ANN）快速将候选从百万级缩小到千级
+2. **排序**：使用更强的 Transformer 模型对候选打分并排序
+
+---
+
+## 架构
+
+### 两阶段推荐流水线
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -49,24 +49,24 @@ Phoenix is a recommendation system that predicts user engagement (likes, reposts
 
 ---
 
-### Retrieval: Two-Tower Model
+### 检索：双塔模型
 
-The retrieval stage uses a **two-tower architecture** that enables efficient similarity search at scale.
+检索阶段使用**双塔架构**，支持大规模高效相似度检索。
 
-#### How Retrieval Works
+#### 检索流程
 
-1. **User Tower**: Encodes user features and engagement history through a transformer to produce a normalized user embedding `[B, D]`
-2. **Candidate Tower**: Computes normalized embeddings for all items in the corpus `[N, D]`
-3. **Similarity Search**: Retrieves top-K candidates using dot product similarity
+1. **用户塔（User Tower）**：将用户特征与互动历史编码成向量 `[B, D]`
+2. **候选塔（Candidate Tower）**：为全量内容生成向量 `[N, D]`
+3. **相似度搜索**：基于点积相似度召回 Top-K 候选
 
 ---
 
-### Ranking: Transformer with Candidate Isolation
+### 排序：候选隔离的 Transformer
 
-The ranking model uses a transformer architecture where **candidates cannot attend to each other** during inference. This is a critical design choice that ensures the score for a candidate doesn't depend on which other candidates are in the batch
+排序模型使用 Transformer 架构，并通过特殊注意力掩码确保**候选之间彼此不可见**。这是一项关键设计：候选的得分不依赖同批次的其他候选，从而保证结果稳定与可缓存。
 
 
-#### Ranking Model Architecture
+#### 排序模型结构
 
 ```
                               PHOENIX RANKING MODEL
@@ -105,16 +105,16 @@ The ranking model uses a transformer architecture where **candidates cannot atte
     │ │          │              │                 │              │            │  │
     │ │ User     │              │ Posts + Authors │              │ Posts +    │  │
     │ │ Hashes   │              │ + Actions +     │              │ Authors +  │  │
-    │ │          │              │ Product Surface │              │ Product    │  │
-    │ └──────────┘              └─────────────────┘              │ Surface    │  │
+    │ └──────────┘              └─────────────────┘              │ Product    │  │
+    │                                                            │ Surface    │  │
     │                                                            └────────────┘  │
     │                                                                            │
     └────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### Attention Mask: Candidate Isolation
+#### 注意力掩码：候选隔离
 
-A key detail is the **attention mask** that prevents candidates from attending to each other while still allowing them to attend to the user and history:
+关键细节是**注意力掩码**：候选可以关注用户与历史，但**不能**关注彼此。
 
 ```
                     ATTENTION MASK VISUALIZATION
@@ -156,19 +156,19 @@ A key detail is the **attention mask** that prevents candidates from attending t
 
 ---
 
-## Key Design Decisions
+## 关键设计决策
 
-### 1. Hash-Based Embeddings
+### 1. 基于哈希的嵌入
 
-Both models use multiple hash functions for embedding lookup
+检索与排序都使用多个哈希函数进行 embedding 查找。
 
-### 2. Shared Architecture
+### 2. 共享架构
 
-The retrieval user tower uses the same transformer architecture as the ranking model
+检索阶段的用户塔与排序模型共用同一套 Transformer 架构。
 
-### 3. Multi-Action Prediction
+### 3. 多行为预测
 
-The ranking model predicts multiple engagement types simultaneously:
+排序模型一次预测多种互动行为：
 
 ```
 Output: [B, num_candidates, num_actions]
@@ -181,25 +181,25 @@ Output: [B, num_candidates, num_actions]
 
 ---
 
-## Running the Code
+## 运行代码
 
-### Installation
+### 安装
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
+安装 [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
-### Running the Ranker
+### 运行排序模型
 
 ```shell
 uv run run_ranker.py
 ```
 
-### Running Retrieval
+### 运行检索模型
 
 ```shell
 uv run run_retrieval.py
 ```
 
-### Running Tests
+### 运行测试
 
 ```shell
 uv run pytest test_recsys_model.py test_recsys_retrieval_model.py

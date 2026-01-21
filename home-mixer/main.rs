@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/main.rs，用于说明该模块的核心实现。
 use clap::Parser;
 use log::info;
 use std::time::Duration;
@@ -36,9 +37,9 @@ async fn main() -> anyhow::Result<()> {
         args.grpc_port, args.metrics_port, args.reload_interval_minutes, args.chunk_size,
     );
 
-    // Create the service implementation
+    // Create the service implementation. 中文：创建服务实现实例。
     let service = HomeMixerServer::new().await;
-    // Keep a reference to stats_receiver before service is moved
+    // Keep a reference to stats_receiver before service is moved. 中文：在 service 被移动前保留对 stats_receiver 的引用。
     let reflection_service = Builder::configure()
         .register_encoded_file_descriptor_set(pb::FILE_DESCRIPTOR_SET)
         .build_v1()?;

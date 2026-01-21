@@ -1,10 +1,11 @@
+//! 中文说明：本文件位于 home-mixer/filters/ineligible_subscription_filter.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::PostCandidate;
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use std::collections::HashSet;
 use tonic::async_trait;
 use xai_candidate_pipeline::filter::{Filter, FilterResult};
 
-/// Filters out subscription-only posts from authors the viewer is not subscribed to.
+/// Filters out subscription-only posts from authors the viewer is not subscribed to. 中文：过滤掉来自未订阅作者的订阅专属内容。
 pub struct IneligibleSubscriptionFilter;
 
 #[async_trait]

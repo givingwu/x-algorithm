@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/thunder_service.rs，用于说明该模块的核心实现。
 use lazy_static::lazy_static;
 use log::{debug, info, warn};
 use std::cmp::Reverse;
@@ -27,11 +28,11 @@ use crate::posts::post_store::PostStore;
 use crate::strato_client::StratoClient;
 
 pub struct ThunderServiceImpl {
-    /// PostStore for retrieving posts by user ID
+    /// PostStore for retrieving posts by user ID. 中文：用于按用户 ID 获取帖子。
     post_store: Arc<PostStore>,
-    /// StratoClient for fetching following lists when not provided
+    /// StratoClient for fetching following lists when not provided. 中文：当未提供关注列表时用于获取关注列表的 StratoClient。
     strato_client: Arc<StratoClient>,
-    /// Semaphore to limit concurrent requests and prevent overload
+    /// Semaphore to limit concurrent requests and prevent overload. 中文：限制并发请求的信号量，防止过载。
     request_semaphore: Arc<Semaphore>,
 }
 
@@ -52,15 +53,15 @@ impl ThunderServiceImpl {
         }
     }
 
-    /// Create a gRPC server for this service
+    /// Create a gRPC server for this service. 中文：为该服务创建 gRPC 服务器。
     pub fn server(self) -> InNetworkPostsServiceServer<Self> {
         InNetworkPostsServiceServer::new(self)
             .accept_compressed(tonic::codec::CompressionEncoding::Zstd)
             .send_compressed(tonic::codec::CompressionEncoding::Zstd)
     }
 
-    /// Analyze found posts, calculate statistics, and report metrics
-    /// The `stage` parameter is used as a label to differentiate between stages (e.g., "post_store", "scored")
+    /// Analyze found posts, calculate statistics, and report metrics. 中文：分析命中的帖子，计算统计信息并上报指标。
+    /// The `stage` parameter is used as a label to differentiate between stages (e.g., "post_store", "scored"). 中文：`stage` 用作区分阶段的标签。
     fn analyze_and_report_post_statistics(posts: &[LightPost], stage: &str) {
         if posts.is_empty() {
             debug!("[{}] No posts found for analysis", stage);
@@ -72,29 +73,29 @@ impl ThunderServiceImpl {
             .unwrap()
             .as_secs() as i64;
 
-        // Time since most recent post
+        // Time since most recent post. 中文：距最新帖子的时间。
         let time_since_most_recent = posts
             .iter()
             .map(|post| post.created_at)
             .max()
             .map(|most_recent| now - most_recent);
 
-        // Time since oldest post
+        // Time since oldest post. 中文：距最旧帖子的时间。
         let time_since_oldest = posts
             .iter()
             .map(|post| post.created_at)
             .min()
             .map(|oldest| now - oldest);
 
-        // Count replies vs original posts
+        // Count replies vs original posts. 中文：统计回复与原帖数量。
         let reply_count = posts.iter().filter(|post| post.is_reply).count();
         let original_count = posts.len() - reply_count;
 
-        // Unique authors
+        // Unique authors. 中文：唯一作者数量。
         let unique_authors: HashSet<_> = posts.iter().map(|post| post.author_id).collect();
         let unique_author_count = unique_authors.len();
 
-        // Report metrics with stage label
+        // Report metrics with stage label. 中文：带阶段标签上报指标。
         if let Some(freshness) = time_since_most_recent {
             GET_IN_NETWORK_POSTS_FOUND_FRESHNESS_SECONDS
                 .with_label_values(&[stage])
@@ -124,7 +125,7 @@ impl ThunderServiceImpl {
                 .observe(posts_per_author);
         }
 
-        // Log statistics with stage label
+        // Log statistics with stage label. 中文：带阶段标签记录统计日志。
         debug!(
             "[{}] Post statistics: total={}, original={}, replies={}, unique_authors={}, posts_per_author={:.2}, reply_ratio={:.2}, time_since_most_recent={:?}s, time_range={:?}s",
             stage,
@@ -150,13 +151,13 @@ impl ThunderServiceImpl {
 
 #[tonic::async_trait]
 impl InNetworkPostsService for ThunderServiceImpl {
-    /// Get posts from users in the network
+    /// Get posts from users in the network. 中文：获取关注网络内用户的帖子。
     async fn get_in_network_posts(
         &self,
         request: Request<GetInNetworkPostsRequest>,
     ) -> Result<Response<GetInNetworkPostsResponse>, Status> {
-        // Try to acquire semaphore permit without blocking
-        // If we're at capacity, reject immediately with RESOURCE_EXHAUSTED
+        // Try to acquire semaphore permit without blocking. 中文：尝试非阻塞获取信号量许可。
+        // If we're at capacity, reject immediately with RESOURCE_EXHAUSTED. 中文：若容量已满，立即返回 RESOURCE_EXHAUSTED。
         let _permit = match self.request_semaphore.try_acquire() {
             Ok(permit) => {
                 IN_FLIGHT_REQUESTS.inc();
@@ -170,7 +171,7 @@ impl InNetworkPostsService for ThunderServiceImpl {
             }
         };
 
-        // Use a guard to decrement in_flight_requests when the request completes
+        // Use a guard to decrement in_flight_requests when the request completes. 中文：使用守卫在请求结束时减少 in_flight_requests。
         struct InFlightGuard;
         impl Drop for InFlightGuard {
             fn drop(&mut self) {
@@ -179,7 +180,7 @@ impl InNetworkPostsService for ThunderServiceImpl {
         }
         let _in_flight_guard = InFlightGuard;
 
-        // Start timer for total latency
+        // Start timer for total latency. 中文：启动总耗时计时器。
         let _total_timer = Timer::new(GET_IN_NETWORK_POSTS_DURATION.clone());
 
         let req = request.into_inner();
@@ -193,7 +194,7 @@ impl InNetworkPostsService for ThunderServiceImpl {
             );
         }
 
-        // If following_user_id list is empty, fetch it from Strato
+        // If following_user_id list is empty, fetch it from Strato. 中文：如果关注列表为空，则从 Strato 获取。
         let following_user_ids = if req.following_user_ids.is_empty() && req.debug {
             info!(
                 "Following list is empty, fetching from Strato for user {}",
@@ -228,14 +229,14 @@ impl InNetworkPostsService for ThunderServiceImpl {
             req.following_user_ids
         };
 
-        // Record metrics for request parameters
+        // Record metrics for request parameters. 中文：记录请求参数指标。
         GET_IN_NETWORK_POSTS_FOLLOWING_SIZE.observe(following_user_ids.len() as f64);
         GET_IN_NETWORK_POSTS_EXCLUDED_SIZE.observe(req.exclude_tweet_ids.len() as f64);
 
-        // Start timer for latency without strato call
+        // Start timer for latency without strato call. 中文：启动不含 Strato 调用的耗时计时器。
         let _processing_timer = Timer::new(GET_IN_NETWORK_POSTS_DURATION_WITHOUT_STRATO.clone());
 
-        // Default max_results if not specified
+        // Default max_results if not specified. 中文：未指定时使用默认 max_results。
         let max_results = if req.max_results > 0 {
             req.max_results as usize
         } else if req.is_video_request {
@@ -245,7 +246,7 @@ impl InNetworkPostsService for ThunderServiceImpl {
         };
         GET_IN_NETWORK_POSTS_MAX_RESULTS.observe(max_results as f64);
 
-        // Limit following_user_ids and exclude_tweet_ids to first K entries
+        // Limit following_user_ids and exclude_tweet_ids to first K entries. 中文：将 following_user_ids 与 exclude_tweet_ids 限制为前 K 个。
         let following_count = following_user_ids.len();
         if following_count > MAX_INPUT_LIST_SIZE {
             warn!(
@@ -271,19 +272,19 @@ impl InNetworkPostsService for ThunderServiceImpl {
             .take(MAX_INPUT_LIST_SIZE)
             .collect();
 
-        // Clone Arc references needed inside spawn_blocking
+        // Clone Arc references needed inside spawn_blocking. 中文：克隆 spawn_blocking 中所需的 Arc 引用。
         let post_store = Arc::clone(&self.post_store);
         let request_user_id = req.user_id as i64;
 
-        // Use spawn_blocking to avoid blocking tokio's async runtime
+        // Use spawn_blocking to avoid blocking tokio's async runtime. 中文：使用 spawn_blocking 避免阻塞 tokio 异步运行时。
         let proto_posts = tokio::task::spawn_blocking(move || {
-            // Create exclude tweet IDs set for efficient filtering of previously seen posts
+            // Create exclude tweet IDs set for efficient filtering of previously seen posts. 中文：构建排除 ID 集合以高效过滤已看内容。
             let exclude_tweet_ids: HashSet<i64> =
                 exclude_tweet_ids.iter().map(|&id| id as i64).collect();
 
             let start_time = Instant::now();
 
-            // Fetch all posts (original + secondary) for the followed users
+            // Fetch all posts (original + secondary) for the followed users. 中文：获取关注用户的全部帖子（原帖 + 回复/转推）。
             let all_posts: Vec<LightPost> = if req.is_video_request {
                 post_store.get_videos_by_users(
                     &following_user_ids,
@@ -300,12 +301,12 @@ impl InNetworkPostsService for ThunderServiceImpl {
                 )
             };
 
-            // Analyze posts and report statistics after querying post_store
+            // Analyze posts and report statistics after querying post_store. 中文：查询 post_store 后分析帖子并上报统计。
             ThunderServiceImpl::analyze_and_report_post_statistics(&all_posts, "retrieved");
 
             let scored_posts = score_recent(all_posts, max_results);
 
-            // Analyze posts and report statistics after scoring
+            // Analyze posts and report statistics after scoring. 中文：评分后分析帖子并上报统计。
             ThunderServiceImpl::analyze_and_report_post_statistics(&scored_posts, "scored");
 
             scored_posts
@@ -321,7 +322,7 @@ impl InNetworkPostsService for ThunderServiceImpl {
             );
         }
 
-        // Record the number of posts returned
+        // Record the number of posts returned. 中文：记录返回帖子数量。
         GET_IN_NETWORK_POSTS_COUNT.observe(proto_posts.len() as f64);
 
         let response = GetInNetworkPostsResponse { posts: proto_posts };
@@ -330,10 +331,10 @@ impl InNetworkPostsService for ThunderServiceImpl {
     }
 }
 
-/// Score posts by recency (created_at timestamp, newer posts first)
+/// Score posts by recency (created_at timestamp, newer posts first). 中文：按时间新旧评分（越新越靠前）。
 fn score_recent(mut light_posts: Vec<LightPost>, max_results: usize) -> Vec<LightPost> {
     light_posts.sort_unstable_by_key(|post| Reverse(post.created_at));
 
-    // Limit to max results
+    // Limit to max results. 中文：限制最大返回数量。
     light_posts.into_iter().take(max_results).collect()
 }

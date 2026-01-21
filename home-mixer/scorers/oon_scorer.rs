@@ -1,10 +1,11 @@
+//! 中文说明：本文件位于 home-mixer/scorers/oon_scorer.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::PostCandidate;
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use crate::params as p;
 use tonic::async_trait;
 use xai_candidate_pipeline::scorer::Scorer;
 
-// Prioritize in-network candidates over out-of-network candidates
+// Prioritize in-network candidates over out-of-network candidates. 中文：优先展示关注关系内的候选，高于关注关系外的候选。
 pub struct OONScorer;
 
 #[async_trait]

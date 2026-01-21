@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/filters/age_filter.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::PostCandidate;
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use crate::util::snowflake;
@@ -5,7 +6,7 @@ use std::time::Duration;
 use tonic::async_trait;
 use xai_candidate_pipeline::filter::{Filter, FilterResult};
 
-/// Filter that removes tweets older than a specified duration.
+/// Filter that removes tweets older than a specified duration. 中文：移除超过指定时长的旧帖子。
 pub struct AgeFilter {
     pub max_age: Duration,
 }

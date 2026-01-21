@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 candidate-pipeline/candidate_pipeline.rs，用于说明该模块的核心实现。
 use crate::filter::Filter;
 use crate::hydrator::Hydrator;
 use crate::query_hydrator::QueryHydrator;
@@ -28,7 +29,7 @@ pub struct PipelineResult<Q, C> {
     pub query: Arc<Q>,
 }
 
-/// Provides a stable request identifier for logging/tracing.
+/// Provides a stable request identifier for logging/tracing. 中文：提供稳定的请求标识符，便于日志记录与链路追踪。
 pub trait HasRequestId {
     fn request_id(&self) -> &str;
 }
@@ -91,7 +92,7 @@ where
         }
     }
 
-    /// Run all query hydrators in parallel and merge results into the query.
+    /// Run all query hydrators in parallel and merge results into the query. 中文：并行运行所有查询补全器，并将结果合并到查询中。
     async fn hydrate_query(&self, query: Q) -> Q {
         let request_id = query.request_id().to_string();
         let hydrators: Vec<_> = self
@@ -122,7 +123,7 @@ where
         hydrated_query
     }
 
-    /// Run all candidate sources in parallel and collect results.
+    /// Run all candidate sources in parallel and collect results. 中文：并行运行所有候选来源并汇总结果。
     async fn fetch_candidates(&self, query: &Q) -> Vec<C> {
         let request_id = query.request_id().to_string();
         let sources: Vec<_> = self.sources().iter().filter(|s| s.enable(query)).collect();
@@ -156,13 +157,13 @@ where
         collected
     }
 
-    /// Run all candidate hydrators in parallel and merge results into candidates.
+    /// Run all candidate hydrators in parallel and merge results into candidates. 中文：并行运行所有候选补全器，并将结果合并到候选内容中。
     async fn hydrate(&self, query: &Q, candidates: Vec<C>) -> Vec<C> {
         self.run_hydrators(query, candidates, self.hydrators(), PipelineStage::Hydrator)
             .await
     }
 
-    /// Run post-selection candidate hydrators in parallel and merge results into candidates.
+    /// Run post-selection candidate hydrators in parallel and merge results into candidates. 中文：并行运行选择后的候选补全器，并将结果合并到候选内容中。
     async fn hydrate_post_selection(&self, query: &Q, candidates: Vec<C>) -> Vec<C> {
         self.run_hydrators(
             query,
@@ -173,7 +174,7 @@ where
         .await
     }
 
-    /// Shared helper to hydrate with a provided hydrator list.
+    /// Shared helper to hydrate with a provided hydrator list. 中文：共享的补全助手函数，使用给定的补全器列表。
     async fn run_hydrators(
         &self,
         query: &Q,
@@ -216,13 +217,13 @@ where
         candidates
     }
 
-    /// Run all filters sequentially. Each filter partitions candidates into kept and removed.
+    /// Run all filters sequentially. Each filter partitions candidates into kept and removed. 中文：顺序运行所有过滤器，每个过滤器会将候选拆分为保留与移除两部分。
     async fn filter(&self, query: &Q, candidates: Vec<C>) -> (Vec<C>, Vec<C>) {
         self.run_filters(query, candidates, self.filters(), PipelineStage::Filter)
             .await
     }
 
-    /// Run post-scoring filters sequentially on already-scored candidates.
+    /// Run post-scoring filters sequentially on already-scored candidates. 中文：在已打分的候选上顺序运行评分后的过滤器。
     async fn filter_post_selection(&self, query: &Q, candidates: Vec<C>) -> (Vec<C>, Vec<C>) {
         self.run_filters(
             query,
@@ -233,7 +234,7 @@ where
         .await
     }
 
-    // Shared helper to run filters sequentially from a provided filter list.
+    // Shared helper to run filters sequentially from a provided filter list. 中文：共享的过滤助手函数，顺序执行给定的过滤器列表。
     async fn run_filters(
         &self,
         query: &Q,
@@ -272,7 +273,7 @@ where
         (candidates, all_removed)
     }
 
-    /// Run all scorers sequentially and apply their results to candidates.
+    /// Run all scorers sequentially and apply their results to candidates. 中文：按顺序执行所有评分器，并将结果应用到候选。
     async fn score(&self, query: &Q, mut candidates: Vec<C>) -> Vec<C> {
         let request_id = query.request_id().to_string();
         let expected_len = candidates.len();
@@ -306,7 +307,7 @@ where
         candidates
     }
 
-    /// Select (sort/truncate) candidates using the configured selector
+    /// Select (sort/truncate) candidates using the configured selector. 中文：使用已配置的选择器对候选进行排序与截断。
     fn select(&self, query: &Q, candidates: Vec<C>) -> Vec<C> {
         if self.selector().enable(query) {
             self.selector().select(query, candidates)
@@ -315,7 +316,7 @@ where
         }
     }
 
-    // Run all side effects in parallel
+    // Run all side effects in parallel. 中文：并行执行所有副作用。
     fn run_side_effects(&self, input: Arc<SideEffectInput<Q, C>>) {
         let side_effects = self.side_effects();
         tokio::spawn(async move {

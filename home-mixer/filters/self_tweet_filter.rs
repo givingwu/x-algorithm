@@ -1,9 +1,10 @@
+//! 中文说明：本文件位于 home-mixer/filters/self_tweet_filter.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::PostCandidate;
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use tonic::async_trait;
 use xai_candidate_pipeline::filter::{Filter, FilterResult};
 
-/// Filter that removes tweets where the author is the viewer.
+/// Filter that removes tweets where the author is the viewer. 中文：过滤掉作者就是当前用户的帖子。
 pub struct SelfTweetFilter;
 
 #[async_trait]

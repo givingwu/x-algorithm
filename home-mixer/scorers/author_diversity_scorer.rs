@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/scorers/author_diversity_scorer.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::PostCandidate;
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use crate::params as p;
@@ -6,7 +7,7 @@ use std::collections::HashMap;
 use tonic::async_trait;
 use xai_candidate_pipeline::scorer::Scorer;
 
-/// Diversify authors served within a single feed response
+/// Diversify authors served within a single feed response. 中文：在单次信息流结果中增加作者多样性。
 pub struct AuthorDiversityScorer {
     decay_factor: f64,
     floor: f64,

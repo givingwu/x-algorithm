@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/filters/muted_keyword_filter.rs，用于说明该模块的核心实现。
 use crate::candidate_pipeline::candidate::PostCandidate;
 use crate::candidate_pipeline::query::ScoredPostsQuery;
 use std::sync::Arc;
@@ -46,10 +47,10 @@ impl Filter<ScoredPostsQuery, PostCandidate> for MutedKeywordFilter {
         for candidate in candidates {
             let tweet_text_token_sequence = self.tokenizer.tokenize(&candidate.tweet_text);
             if matcher.matches(&tweet_text_token_sequence) {
-                // Matches muted keywords - should be removed/filtered out
+                // Matches muted keywords - should be removed/filtered out. 中文：命中屏蔽关键词，应被移除。
                 removed.push(candidate);
             } else {
-                // Does not match muted keywords - keep it
+                // Does not match muted keywords - keep it. 中文：未命中屏蔽关键词，保留该候选。
                 kept.push(candidate);
             }
         }

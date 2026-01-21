@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 thunder/kafka/tweet_events_listener_v2.rs，用于说明该模块的核心实现。
 use anyhow::Result;
 use log::{info, warn};
 use std::sync::Arc;
@@ -16,10 +17,10 @@ use crate::{
     posts::post_store::PostStore,
 };
 
-/// Counter for logging deserialization every Nth time
+/// Counter for logging deserialization every Nth time. 中文：用于每隔 N 次记录反序列化日志的计数器。
 static DESER_LOG_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
-/// Start the tweet event processing loop in the background with configurable number of threads
+/// Start the tweet event processing loop in the background with configurable number of threads. 中文：后台启动推文事件处理循环，可配置线程数。
 pub async fn start_tweet_event_processing_v2(
     base_config: KafkaConsumerConfig,
     post_store: Arc<PostStore>,
@@ -29,7 +30,7 @@ pub async fn start_tweet_event_processing_v2(
     let num_partitions = args.kafka_tweet_events_v2_num_partitions;
     let kafka_num_threads = args.kafka_num_threads;
 
-    // Use all available partitions
+    // Use all available partitions. 中文：使用所有可用分区。
     let partitions_to_use: Vec<i32> = (0..num_partitions as i32).collect();
     let partitions_per_thread = num_partitions.div_ceil(kafka_num_threads);
 
@@ -41,7 +42,7 @@ pub async fn start_tweet_event_processing_v2(
     spawn_processing_threads_v2(base_config, partitions_to_use, post_store, args, tx);
 }
 
-/// Spawn multiple processing threads, each handling a subset of partitions
+/// Spawn multiple processing threads, each handling a subset of partitions. 中文：启动多个处理线程，每个线程处理一部分分区。
 fn spawn_processing_threads_v2(
     base_config: KafkaConsumerConfig,
     partitions_to_use: Vec<i32>,
@@ -52,7 +53,7 @@ fn spawn_processing_threads_v2(
     let total_partitions = partitions_to_use.len();
     let partitions_per_thread = total_partitions.div_ceil(args.kafka_num_threads);
 
-    // Create shared semaphore to prevent too many tweet_events partition updates at the same time
+    // Create shared semaphore to prevent too many tweet_events partition updates at the same time. 中文：创建共享信号量，避免同时更新过多分区。
     let semaphore = Arc::new(Semaphore::new(3));
 
     for thread_id in 0..args.kafka_num_threads {
@@ -82,7 +83,7 @@ fn spawn_processing_threads_v2(
 
             match create_kafka_consumer(thread_config).await {
                 Ok(consumer) => {
-                    // Start partition lag monitoring for this thread's partitions
+                    // Start partition lag monitoring for this thread's partitions. 中文：启动该线程分区的延迟监控。
                     crate::kafka::tweet_events_listener::start_partition_lag_monitor(
                         Arc::clone(&consumer),
                         topic,
@@ -115,7 +116,7 @@ fn spawn_processing_threads_v2(
     }
 }
 
-/// Process a single batch of messages: deserialize, extract posts, and store them
+/// Process a single batch of messages: deserialize, extract posts, and store them. 中文：处理单批消息：反序列化、提取帖子并存储。
 fn deserialize_batch(
     messages: Vec<KafkaMessage>,
 ) -> Result<(Vec<LightPost>, Vec<TweetDeleteEvent>)> {
@@ -166,7 +167,7 @@ fn deserialize_batch(
     Ok((create_tweets, delete_tweets))
 }
 
-/// Main message processing loop that polls Kafka, batches messages, and stores posts
+/// Main message processing loop that polls Kafka, batches messages, and stores posts. 中文：主处理循环，轮询 Kafka、批量处理消息并存储帖子。
 async fn process_tweet_events_v2(
     consumer: Arc<RwLock<KafkaConsumer>>,
     post_store: Arc<PostStore>,
@@ -205,20 +206,20 @@ async fn process_tweet_events_v2(
 
                 message_buffer.extend(messages);
 
-                // Process batch when we have enough messages
+                // Process batch when we have enough messages. 中文：当消息数量足够时处理批次。
                 if message_buffer.len() >= batch_size {
                     batch_count += 1;
                     let messages = std::mem::take(&mut message_buffer);
                     let post_store_clone = Arc::clone(&post_store);
 
-                    // Acquire semaphore permit if init data is downloaded to allow enough CPU for serving requests
+                    // Acquire semaphore permit if init data is downloaded to allow enough CPU for serving requests. 中文：初始化数据完成后获取信号量许可，确保请求有足够 CPU。
                     let permit = if init_data_downloaded {
                         Some(semaphore.clone().acquire_owned().await.unwrap())
                     } else {
                         None
                     };
 
-                    // Send batch to blocking thread pool for processing
+                    // Send batch to blocking thread pool for processing. 中文：将批次发送到阻塞线程池处理。
                     let _ = tokio::task::spawn_blocking(move || {
                         let _permit = permit; // Hold permit until task completes
                         match deserialize_batch(messages) {

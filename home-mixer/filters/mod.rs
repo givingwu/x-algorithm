@@ -1,3 +1,4 @@
+//! 中文说明：本文件位于 home-mixer/filters/mod.rs，用于说明该模块的核心实现。
 pub mod age_filter;
 pub mod author_socialgraph_filter;
 pub mod core_data_hydration_filter;
